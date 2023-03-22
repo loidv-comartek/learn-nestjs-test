@@ -1,0 +1,18 @@
+{
+  "moduleFileExtensions": ["js", "json", "ts"],
+  "rootDir": "../",
+  "testRegex": ".e2e-spec.ts$",
+  "transform": {
+    "^.+\\.(t|j)s$": "ts-jest"
+  },
+  "preset": "ts-jest",
+  "globalSetup": "./test/global-setup.ts",
+  "globalTeardown": "./test/global-teardown.ts",
+  "collectCoverageFrom": ["**/*.(t|j)s"],
+  "testEnvironment": "node",
+  "roots": ["<rootDir>/../../apps/nest-unit-test-pg"],
+  "moduleNameMapper": {
+    "^@app/common(|/.*)$": "<rootDir>/../../libs/common/src/$1",
+    "^@app/test-utils(|/.*)$": "<rootDir>/../../libs/test-utils/src/$1"
+  }
+}
