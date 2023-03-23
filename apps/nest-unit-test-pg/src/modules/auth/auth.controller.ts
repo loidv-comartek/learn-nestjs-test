@@ -11,6 +11,8 @@ import {
   HttpCode,
   HttpStatus,
   Post,
+  Query,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -21,6 +23,10 @@ import { RecoveryAccountOrderOutput } from './dto/auth-recovery-output.dto';
 import { RegisterInput } from './dto/auth-register-input.dto';
 import { RegisterOutput } from './dto/auth-register-output.dto';
 import { AuthTokenOutput } from './dto/auth-token-output.dto';
+import { ResetInput } from './dto/auth-reset-input.dto';
+import { User } from './decorators/user.decorator';
+import { UserInRequest } from './types/user-in-request.type';
+import { JwtAuthGuard } from './guards/jwt.guard';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -95,6 +101,34 @@ export class AuthController {
         direct_url: `${this.envService.get('API_HOST_URL')}/api/v1/auth/login`,
         message:
           'Recovery request successfully, please check your email to recovering your account!',
+      },
+      meta: {},
+    };
+  }
+
+  @Post('reset')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({
+    summary: 'reset password account API ',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: SwaggerBaseApiResponse(AuthTokenOutput),
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    type: BaseApiErrorResponse,
+  })
+  @HttpCode(HttpStatus.OK)
+  @UseInterceptors(ClassSerializerInterceptor)
+  async reset(
+    @Body() { password }: ResetInput,
+    @User() me: UserInRequest,
+  ): Promise<BaseApiResponse<AuthTokenOutput>> {
+    const user = await this.authService.resetPassword(me, password);
+    return {
+      data: {
+        ...this.authService.getAuthToken(user),
       },
       meta: {},
     };

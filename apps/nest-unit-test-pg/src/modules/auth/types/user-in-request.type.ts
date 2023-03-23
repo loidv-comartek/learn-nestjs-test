@@ -1,4 +1,4 @@
 export class UserInRequest {
-  userId: string;
+  userId: number;
   username: string;
 }
