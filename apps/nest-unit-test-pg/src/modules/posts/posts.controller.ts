@@ -1,4 +1,7 @@
-import { SwaggerBaseApiResponse } from '@app/common/dtos/base-api-response.dto';
+import {
+  BaseApiResponse,
+  SwaggerBaseApiResponse,
+} from '@app/common/dtos/base-api-response.dto';
 import {
   Body,
   Controller,
@@ -25,12 +28,13 @@ import { UpdatePostDto } from './dto/update-post.dto';
 import { PostsService } from './posts.service';
 
 @ApiTags('posts')
+@UseGuards(JwtAuthGuard)
+@ApiBearerAuth()
 @Controller('posts')
 export class PostsController {
   constructor(private readonly postsService: PostsService) {}
 
   @Post('create')
-  @ApiBearerAuth()
   @ApiOperation({
     summary: 'Create post API',
   })
@@ -38,30 +42,72 @@ export class PostsController {
     status: HttpStatus.CREATED,
     type: SwaggerBaseApiResponse(PostOutput),
   })
-  @UseGuards(JwtAuthGuard)
-  create(@Request() req, @Body() input: CreatePostDto) {
+  async create(
+    @Request() req,
+    @Body() input: CreatePostDto,
+  ): Promise<BaseApiResponse<PostOutput>> {
     input.userId = (req.user as JwtPayloadInterface).sub;
+    const newPost = await this.postsService.create(input);
 
-    return this.postsService.create(input);
+    return { data: newPost, meta: {} };
   }
 
   @Get()
-  findAll() {
-    return this.postsService.findAll();
+  @ApiOperation({
+    summary: 'Get all posts API',
+  })
+  @ApiResponse({
+    status: HttpStatus.FOUND,
+    type: SwaggerBaseApiResponse(PostOutput),
+  })
+  async findAll(): Promise<BaseApiResponse<PostOutput[]>> {
+    const allPosts = await this.postsService.findAll();
+
+    return { data: allPosts, meta: {} };
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.postsService.findOne(+id);
+  @ApiOperation({
+    summary: 'Get post by id API',
+  })
+  @ApiResponse({
+    status: HttpStatus.FOUND,
+    type: SwaggerBaseApiResponse(PostOutput),
+  })
+  async findOne(@Param('id') id: string): Promise<BaseApiResponse<PostOutput>> {
+    const post = await this.postsService.findOne(+id);
+
+    return { data: post, meta: {} };
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updatePostDto: UpdatePostDto) {
-    return this.postsService.update(+id, updatePostDto);
+  @ApiOperation({
+    summary: 'Update post API',
+  })
+  @ApiResponse({
+    status: HttpStatus.ACCEPTED,
+    type: SwaggerBaseApiResponse(Boolean),
+  })
+  async update(
+    @Param('id') id: string,
+    @Body() updatePostDto: UpdatePostDto,
+  ): Promise<BaseApiResponse<boolean>> {
+    const updateResult = await this.postsService.update(+id, updatePostDto);
+
+    return { data: updateResult, meta: {} };
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.postsService.remove(+id);
+  @ApiOperation({
+    summary: 'Delete post API',
+  })
+  @ApiResponse({
+    status: HttpStatus.ACCEPTED,
+    type: SwaggerBaseApiResponse(Boolean),
+  })
+  async remove(@Param('id') id: string): Promise<BaseApiResponse<boolean>> {
+    const deleteResult = await this.postsService.remove(+id);
+
+    return { data: deleteResult, meta: {} };
   }
 }
