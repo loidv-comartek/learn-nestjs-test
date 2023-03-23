@@ -43,6 +43,12 @@ export class AuthService {
     return this.getAuthToken(user);
   }
 
+  async recoveryAccountOrder(email: string): Promise<Boolean> {
+    // const user = this.userService
+    const user = true;
+    if (!user) return true;
+  }
+
   getAuthToken(user: UserAccessTokenClaims | UserOutput): AuthTokenOutput {
     const subject = { sub: user.id };
     const payload = {
@@ -52,11 +58,16 @@ export class AuthService {
 
     const authToken = {
       refreshToken: this.jwtService.sign(subject, {
-        expiresIn: this.env.get('JWT_REFRESH_TOKEN_EXP_IN_SEC'),
+        expiresIn: `${this.env.get('JWT_REFRESH_TOKEN_EXP_IN_SEC')}s`,
+        secret: this.env.get('JWT_TOKEN_SECRET_KEY'),
       }),
+
       accessToken: this.jwtService.sign(
         { ...payload, ...subject },
-        { expiresIn: this.env.get('JWT_ACCESS_TOKEN_EXP_IN_SEC') },
+        {
+          expiresIn: `${this.env.get('JWT_ACCESS_TOKEN_EXP_IN_SEC')}s`,
+          secret: this.env.get('JWT_TOKEN_SECRET_KEY'),
+        },
       ),
     };
     return plainToClass(AuthTokenOutput, authToken, {

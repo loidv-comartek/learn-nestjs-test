@@ -3,18 +3,21 @@ import {
   BaseApiResponse,
   SwaggerBaseApiResponse,
 } from '@app/common/dtos/base-api-response.dto';
+import { EnvService } from '@app/common/env/env.service';
 import {
-  Controller,
-  Post,
   Body,
-  HttpStatus,
-  HttpCode,
-  UseInterceptors,
   ClassSerializerInterceptor,
+  Controller,
+  HttpCode,
+  HttpStatus,
+  Post,
+  UseInterceptors
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { LoginInput } from './dto/auth-login-input.dto';
+import { RecoveryAccountOrderInput } from './dto/auth-recovery-input';
+import { RecoveryAccountOrderOutput } from './dto/auth-recovery-output.dto';
 import { RegisterInput } from './dto/auth-register-input.dto';
 import { RegisterOutput } from './dto/auth-register-output.dto';
 import { AuthTokenOutput } from './dto/auth-token-output.dto';
@@ -22,7 +25,10 @@ import { AuthTokenOutput } from './dto/auth-token-output.dto';
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly envService: EnvService,
+  ) {}
 
   @Post('register')
   @ApiOperation({
@@ -59,5 +65,34 @@ export class AuthController {
   ): Promise<BaseApiResponse<AuthTokenOutput>> {
     const authToken = await this.authService.login(input);
     return { data: authToken, meta: {} };
+  }
+
+  @Post('recovery')
+  @ApiOperation({
+    summary: 'User forgotten password API',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: SwaggerBaseApiResponse(RecoveryAccountOrderOutput),
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    type: BaseApiErrorResponse,
+  })
+  @HttpCode(HttpStatus.OK)
+  @UseInterceptors(ClassSerializerInterceptor)
+  async recovery(
+    @Body() { email }: RecoveryAccountOrderInput,
+  ): Promise<BaseApiResponse<RecoveryAccountOrderOutput>> {
+    await this.authService.recoveryAccountOrder(email);
+    return {
+      data: {
+        isSuccess: true,
+        direct_url: `${this.envService.get('API_HOST_URL')}/api/v1/auth/login`,
+        message:
+          'Recovery request successfully, please check your email to recovering your account!',
+      },
+      meta: {},
+    };
   }
 }
