@@ -17,4 +17,12 @@ export class UserRepository extends Repository<User> {
 
     return user;
   }
+
+  async findByEmail(email: string): Promise<User> {
+    const user = await this.findOne({ where: { email } });
+    if (!user) {
+      throw new NotFoundException();
+    }
+    return user;
+  }
 }

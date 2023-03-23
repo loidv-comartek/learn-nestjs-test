@@ -11,6 +11,12 @@ export class EnvironmentVariables {
   @IsString()
   JWT_TOKEN_SECRET_KEY: string;
 
+  @IsString()
+  JWT_TOKEN_ACCESS_KEY: string;
+
+  @IsString()
+  JWT_TOKEN_REFESH_KEY: string;
+
   @IsInt()
   PORT_APP_MONGO: number;
 
@@ -37,14 +43,6 @@ export class EnvironmentVariables {
   @IsString()
   @IsOptional()
   MONGODB_URI: string;
-
-  @IsString()
-  @IsOptional()
-  JWT_ACCESS_KEY: string;
-
-  @IsString()
-  @IsOptional()
-  JWT_SECRET_KEY: string;
 
   @IsInt()
   JWT_ACCESS_TOKEN_EXP_IN_SEC: number;

@@ -38,6 +38,10 @@ export class AuthController {
     status: HttpStatus.CREATED,
     type: SwaggerBaseApiResponse(RegisterOutput),
   })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    type: BaseApiErrorResponse,
+  })
   async registerLocal(
     @Body() input: RegisterInput,
   ): Promise<BaseApiResponse<RegisterOutput>> {
@@ -69,7 +73,7 @@ export class AuthController {
 
   @Post('recovery')
   @ApiOperation({
-    summary: 'User forgotten password API',
+    summary: 'recovery account order API',
   })
   @ApiResponse({
     status: HttpStatus.OK,
