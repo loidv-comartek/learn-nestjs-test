@@ -13,7 +13,7 @@ let config: TypeOrmModuleOptions & PostgresConnectionOptions = {
   password: process.env.PG_PASS,
   database: process.env.PG_DATABASE,
   entities: [User],
-  synchronize: false,
+  synchronize: true,
   migrationsRun: false,
   migrations: ['dist/migrations/*.js'],
 };
