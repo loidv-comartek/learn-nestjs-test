@@ -11,6 +11,7 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
     const options: TypeOrmModuleOptions = {
       type: 'postgres',
       entities: [User],
+      database: this.env.get('PG_DATABASE'),
       port: this.env.get('PG_PORT'),
       host: this.env.get('PG_HOST'),
       username: this.env.get('PG_USER'),

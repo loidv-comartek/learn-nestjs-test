@@ -2,11 +2,12 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { validate } from 'class-validator';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { TypeOrmConfigService } from './typeorm-config.service';
 import { UsersModule } from './modules/users/users.module';
 import { PostsModule } from './modules/posts/posts.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { EnvModule } from '@app/common/env/env.module';
+import { setupDataSource } from '../test/test-utils';
+import { dataSource } from './configs/database.config';
 
 @Module({
   imports: [
@@ -16,8 +17,19 @@ import { EnvModule } from '@app/common/env/env.module';
       expandVariables: true,
     }),
     EnvModule,
+    // TypeOrmModule.forRootAsync({
+    //   useClass: TypeOrmConfigService,
+    // }),
     TypeOrmModule.forRootAsync({
-      useClass: TypeOrmConfigService,
+      useFactory: () => ({
+        type: 'postgres',
+        migrationsRun: false,
+      }),
+      dataSourceFactory: async () => {
+        if (process.env.NODE_ENV === 'test') {
+          return setupDataSource();
+        } else return dataSource;
+      },
     }),
     UsersModule,
     PostsModule,

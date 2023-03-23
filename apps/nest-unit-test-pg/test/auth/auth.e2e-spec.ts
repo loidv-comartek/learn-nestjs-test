@@ -1,41 +1,17 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
+import { seedAdminUser, setupDataSource } from '../test-utils';
 import { AppModule } from '../../src/app.module';
-// import { setupDataSource } from '@app/test-utils';
-import { DataType, newDb } from 'pg-mem';
-import { User } from '../../src/modules/users/entities/user.entity';
-import { seedAdminUser } from '../test-utils';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication;
 
   beforeAll(async () => {
-    const db = newDb();
-    // Register current_database function
-    db.public.registerFunction({
-      name: 'current_database',
-      args: [],
-      returns: DataType.text,
-      implementation: (x) => `hello world ${x}`,
-    });
-
-    // Get PG in memory DB connection
-    const connection = await db.adapters.createTypeormConnection({
-      type: 'postgres',
-    });
-
-    // create schema
-    await connection.synchronize();
-
-    console.log('connection', connection);
+    await setupDataSource();
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-    })
-      .overrideProvider('DATABASE_CONNECTION')
-      .useValue(connection)
-      .compile();
+    }).compile();
 
     app = moduleFixture.createNestApplication();
 
@@ -43,7 +19,10 @@ describe('AppController (e2e)', () => {
   });
 
   it('should be defined', async () => {
-    await seedAdminUser(app);
+    // test database in pg-mem
+    // create user and login
+    const { adminUser, authTokenForAdmin } = await seedAdminUser(app);
+
     expect(app).toBeDefined();
   });
 
