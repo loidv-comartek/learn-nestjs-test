@@ -10,8 +10,8 @@ const mockedAuthService = {
 
 describe('AuthController', () => {
   let controller: AuthController;
-
-  beforeEach(async () => {
+  
+  beforeEach( async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
       providers: [{ provide: AuthService, useValue: mockedAuthService }],

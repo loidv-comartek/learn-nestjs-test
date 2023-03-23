@@ -5,6 +5,12 @@ export class EnvironmentVariables {
   @IsInt()
   PORT_APP_PG: number;
 
+  @IsString()
+  API_HOST_URL: string;
+
+  @IsString()
+  JWT_TOKEN_SECRET_KEY: string;
+
   @IsInt()
   PORT_APP_MONGO: number;
 
