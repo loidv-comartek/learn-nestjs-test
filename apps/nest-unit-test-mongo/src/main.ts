@@ -29,7 +29,7 @@ async function bootstrap() {
   const port = configService.get<number>('PORT_APP_MONGO');
 
   await app.listen(port, () => {
-    logger.log(`API MONGO APP is listening https://localhost:${port}`);
+    logger.log(`API MONGO APP is listening http://localhost:${port}`);
   });
 }
 bootstrap();

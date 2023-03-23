@@ -20,9 +20,7 @@ export class UsersService {
     const user = plainToClass(User, input);
 
     user.password = await hash(input.password, 10);
-    console.log('ok');
     await this.repository.save(user);
-    console.log('ok tiep');
     return plainToClass(UserOutput, user, {
       excludeExtraneousValues: true,
     });
