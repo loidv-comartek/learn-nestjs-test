@@ -2,7 +2,7 @@ import { EnvService } from '@app/common/env/env.service';
 import {
   BadRequestException,
   Injectable,
-  UnauthorizedException
+  UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { plainToClass } from 'class-transformer';
@@ -16,6 +16,7 @@ import {
   AuthTokenOutput,
   UserAccessTokenClaims,
 } from './dto/auth-token-output.dto';
+import { JwtPayloadInterface } from './interfaces/jwt-payload.interface';
 
 @Injectable()
 export class AuthService {
@@ -49,7 +50,7 @@ export class AuthService {
     return this.getAuthToken(user);
   }
 
-  async recoveryAccountOrder(email: string): Promise<Boolean> {
+  async recoveryAccountOrder(email: string): Promise<boolean> {
     const user = await this.userRepository.findByEmail(email);
     if (!user) return true;
     setTimeout(() => {
@@ -60,7 +61,7 @@ export class AuthService {
 
   getAuthToken(user: UserAccessTokenClaims | UserOutput): AuthTokenOutput {
     const subject = { sub: user.id };
-    const payload = {
+    const payload: JwtPayloadInterface = {
       username: user.username,
       sub: user.id,
     };
