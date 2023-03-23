@@ -4,6 +4,7 @@ import { UserRepository } from '../users/repositories/user.repository';
 import { CreatePostDto } from './dto/create-post.dto';
 import { PostOutput } from './dto/post-output.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
+import { Post } from './entities/post.entity';
 import { PostRepository } from './repositories/post.repository';
 
 @Injectable()
@@ -23,24 +24,50 @@ export class PostsService {
     });
     await this.postRepository.save(newPost);
 
-    return plainToInstance(PostOutput, newPost, {
+    return this.getPostOutput(newPost) as PostOutput;
+  }
+
+  async findAll() {
+    const allPosts = await this.postRepository.find({
+      where: { deletedAt: null },
+      relations: ['user'],
+    });
+
+    return this.getPostOutput(allPosts) as PostOutput[];
+  }
+
+  async findOne(id: number) {
+    const post = await this.postRepository.findOne({
+      where: { id, deletedAt: null },
+      relations: ['user'],
+    });
+
+    return this.getPostOutput(post) as PostOutput;
+  }
+
+  getPostOutput(input: Post | Post[]): PostOutput | PostOutput[] {
+    return plainToInstance(PostOutput, input, {
       excludeExtraneousValues: true,
     });
   }
 
-  findAll() {
-    return `This action returns all posts`;
+  async update(id: number, input: UpdatePostDto) {
+    const post = await this.findOne(id);
+    if (!post) {
+      return false;
+    }
+    await this.postRepository.update({ id }, input);
+
+    return true;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} post`;
-  }
+  async remove(id: number) {
+    const post = await this.findOne(id);
+    if (!post) {
+      return false;
+    }
+    await this.postRepository.softDelete({ id });
 
-  update(id: number, updatePostDto: UpdatePostDto) {
-    return `This action updates a #${id} post`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} post`;
+    return true;
   }
 }
