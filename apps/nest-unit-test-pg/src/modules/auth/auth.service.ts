@@ -1,8 +1,13 @@
 import { EnvService } from '@app/common/env/env.service';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { plainToClass } from 'class-transformer';
 import { UserOutput } from '../users/dto/user-output.dto';
+import { UserRepository } from '../users/repositories/user.repository';
 import { UsersService } from '../users/users.service';
 import { LoginInput } from './dto/auth-login-input.dto';
 import { RegisterInput } from './dto/auth-register-input.dto';
@@ -15,6 +20,7 @@ import {
 @Injectable()
 export class AuthService {
   constructor(
+    private userRepository: UserRepository,
     private jwtService: JwtService,
     private userService: UsersService,
     private env: EnvService,
@@ -44,9 +50,12 @@ export class AuthService {
   }
 
   async recoveryAccountOrder(email: string): Promise<Boolean> {
-    // const user = this.userService
-    const user = true;
+    const user = await this.userRepository.findByEmail(email);
     if (!user) return true;
+    setTimeout(() => {
+      console.log(`sending email to ${email}`);
+    }, 1000);
+    return true;
   }
 
   getAuthToken(user: UserAccessTokenClaims | UserOutput): AuthTokenOutput {
@@ -59,14 +68,14 @@ export class AuthService {
     const authToken = {
       refreshToken: this.jwtService.sign(subject, {
         expiresIn: `${this.env.get('JWT_REFRESH_TOKEN_EXP_IN_SEC')}s`,
-        secret: this.env.get('JWT_TOKEN_SECRET_KEY'),
+        secret: this.env.get('JWT_TOKEN_REFESH_KEY'),
       }),
 
       accessToken: this.jwtService.sign(
         { ...payload, ...subject },
         {
           expiresIn: `${this.env.get('JWT_ACCESS_TOKEN_EXP_IN_SEC')}s`,
-          secret: this.env.get('JWT_TOKEN_SECRET_KEY'),
+          secret: this.env.get('JWT_TOKEN_ACCESS_KEY'),
         },
       ),
     };
@@ -76,6 +85,10 @@ export class AuthService {
   }
 
   async register(input: RegisterInput): Promise<RegisterOutput> {
+    const user = await this.userRepository.findOne({
+      where: [{ username: input.username }, { email: input.email }],
+    });
+    if (user) throw new BadRequestException();
     const registeredUser = await this.userService.createUser(input);
     return plainToClass(RegisterOutput, registeredUser, {
       excludeExtraneousValues: true,
