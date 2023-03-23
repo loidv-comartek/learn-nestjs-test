@@ -17,6 +17,8 @@ import {
   UserAccessTokenClaims,
 } from './dto/auth-token-output.dto';
 import { JwtPayloadInterface } from './interfaces/jwt-payload.interface';
+import { User } from '../users/entities/user.entity';
+import { UserInRequest } from './types/user-in-request.type';
 
 @Injectable()
 export class AuthService {
@@ -69,7 +71,7 @@ export class AuthService {
     const authToken = {
       refreshToken: this.jwtService.sign(subject, {
         expiresIn: `${this.env.get('JWT_REFRESH_TOKEN_EXP_IN_SEC')}s`,
-        secret: this.env.get('JWT_TOKEN_REFESH_KEY'),
+        secret: this.env.get('JWT_TOKEN_REFRESH_KEY'),
       }),
 
       accessToken: this.jwtService.sign(
@@ -94,5 +96,15 @@ export class AuthService {
     return plainToClass(RegisterOutput, registeredUser, {
       excludeExtraneousValues: true,
     });
+  }
+
+  async resetPassword(
+    me: UserInRequest,
+    password: string,
+  ): Promise<UserOutput> {
+    const user = await this.userRepository.getById(me.userId);
+    if (!user) throw new UnauthorizedException();
+    user.password = password;
+    return this.userService.createUser(user);
   }
 }

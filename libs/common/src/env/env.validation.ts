@@ -15,7 +15,7 @@ export class EnvironmentVariables {
   JWT_TOKEN_ACCESS_KEY: string;
 
   @IsString()
-  JWT_TOKEN_REFESH_KEY: string;
+  JWT_TOKEN_REFRESH_KEY: string;
 
   @IsInt()
   PORT_APP_MONGO: number;
