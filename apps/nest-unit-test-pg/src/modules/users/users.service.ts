@@ -57,4 +57,9 @@ export class UsersService {
       updateUserInput,
     );
   }
+
+  async find(filter: FilterUserInput) {
+    const users = await this.repository.find({ where: filter });
+    return users;
+  }
 }
