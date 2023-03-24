@@ -26,6 +26,22 @@ describe('UsersService', () => {
         affected: 1,
       };
     }),
+    find: jest.fn(() => {
+      return [
+        {
+          username: 'John',
+          password: 'Admin@123',
+          email: 'john@gmail.com',
+          isAccountDisabled: false,
+        },
+        {
+          username: 'John1',
+          password: 'JohnDoe@123',
+          email: 'JohnDoe@gmail.com',
+          isAccountDisabled: false,
+        },
+      ];
+    }),
   };
 
   const mockedEnvService = { get: jest.fn() };
@@ -79,5 +95,23 @@ describe('UsersService', () => {
       raw: [],
       affected: 1,
     });
+  });
+
+  it('should be return a user array', async () => {
+    const result = await service.find({ username: 'admin' });
+    expect(result).toMatchObject([
+      {
+        username: 'John',
+        password: 'Admin@123',
+        email: 'john@gmail.com',
+        isAccountDisabled: false,
+      },
+      {
+        username: 'John1',
+        password: 'JohnDoe@123',
+        email: 'JohnDoe@gmail.com',
+        isAccountDisabled: false,
+      },
+    ]);
   });
 });
