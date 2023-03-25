@@ -17,6 +17,11 @@ export class PostsService {
   async create(input: CreatePostDto) {
     const { content, title, userId } = input;
     const user = await this.userRepository.findOne({ where: { id: userId } });
+
+    if (!user) {
+      throw new Error('Can not find user creating the post');
+    }
+
     const newPost = this.postRepository.create({
       content,
       title,
@@ -54,7 +59,7 @@ export class PostsService {
   async update(id: number, input: UpdatePostDto) {
     const post = await this.findOne(id);
     if (!post) {
-      return false;
+      throw new Error('Can not find post to update');
     }
     await this.postRepository.update({ id }, input);
 
@@ -64,7 +69,7 @@ export class PostsService {
   async remove(id: number) {
     const post = await this.findOne(id);
     if (!post) {
-      return false;
+      throw new Error('Can not find post to delete');
     }
     await this.postRepository.softDelete({ id });
 
