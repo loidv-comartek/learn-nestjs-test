@@ -14,6 +14,7 @@ import {
   Request,
   UseGuards,
 } from '@nestjs/common';
+import { BadRequestException } from '@nestjs/common/exceptions';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -47,9 +48,13 @@ export class PostsController {
     @Body() input: CreatePostDto,
   ): Promise<BaseApiResponse<PostOutput>> {
     input.userId = (req.user as JwtPayloadInterface).sub;
-    const newPost = await this.postsService.create(input);
 
-    return { data: newPost, meta: {} };
+    try {
+      const newPost = await this.postsService.create(input);
+      return { data: newPost, meta: {} };
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
   }
 
   @Get()
@@ -92,9 +97,12 @@ export class PostsController {
     @Param('id') id: string,
     @Body() updatePostDto: UpdatePostDto,
   ): Promise<BaseApiResponse<boolean>> {
-    const updateResult = await this.postsService.update(+id, updatePostDto);
-
-    return { data: updateResult, meta: {} };
+    try {
+      const updateResult = await this.postsService.update(+id, updatePostDto);
+      return { data: updateResult, meta: {} };
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
   }
 
   @Delete(':id')
@@ -106,8 +114,11 @@ export class PostsController {
     type: SwaggerBaseApiResponse(Boolean),
   })
   async remove(@Param('id') id: string): Promise<BaseApiResponse<boolean>> {
-    const deleteResult = await this.postsService.remove(+id);
-
-    return { data: deleteResult, meta: {} };
+    try {
+      const deleteResult = await this.postsService.remove(+id);
+      return { data: deleteResult, meta: {} };
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
   }
 }
