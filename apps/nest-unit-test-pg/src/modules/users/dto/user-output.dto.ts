@@ -24,9 +24,9 @@ export class UserOutput {
 
   @Expose()
   @ApiProperty()
-  createdAt: string;
+  createdAt: Date;
 
   @Expose()
   @ApiProperty()
-  updatedAt: string;
+  updatedAt: Date;
 }

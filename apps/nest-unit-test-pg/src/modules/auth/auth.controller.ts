@@ -45,9 +45,11 @@ export class AuthController {
     type: SwaggerBaseApiResponse(RegisterOutput),
   })
   @ApiResponse({
-    status: HttpStatus.BAD_REQUEST,
+    status: HttpStatus.UNAUTHORIZED,
     type: BaseApiErrorResponse,
   })
+  @HttpCode(HttpStatus.CREATED)
+  @UseInterceptors(ClassSerializerInterceptor)
   async registerLocal(
     @Body() input: RegisterInput,
   ): Promise<BaseApiResponse<RegisterOutput>> {
