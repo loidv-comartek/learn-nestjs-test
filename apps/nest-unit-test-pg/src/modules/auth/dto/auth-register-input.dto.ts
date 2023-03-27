@@ -10,12 +10,13 @@ import {
 export class RegisterInput {
   @ApiProperty()
   @IsNotEmpty()
-  @MaxLength(100)
+  @Length(3, 100)
   @IsString()
   name: string;
 
   @ApiProperty()
-  @MaxLength(200)
+  @IsNotEmpty()
+  @Length(6, 100)
   @IsString()
   username: string;
 
@@ -31,5 +32,5 @@ export class RegisterInput {
   @MaxLength(100)
   email: string;
 
-  isAccountDisabled: boolean;
+  isAccountDisabled?: boolean;
 }

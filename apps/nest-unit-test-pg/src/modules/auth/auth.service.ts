@@ -17,7 +17,6 @@ import {
   UserAccessTokenClaims,
 } from './dto/auth-token-output.dto';
 import { JwtPayloadInterface } from './interfaces/jwt-payload.interface';
-import { User } from '../users/entities/user.entity';
 import { UserInRequest } from './types/user-in-request.type';
 
 @Injectable()
@@ -52,13 +51,23 @@ export class AuthService {
     return this.getAuthToken(user);
   }
 
+  async sendingEmail(email) {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve('ok');
+        console.log(`sending email to ${email}`);
+      }, 1000);
+    });
+  }
+
   async recoveryAccountOrder(email: string): Promise<boolean> {
-    const user = await this.userRepository.findByEmail(email);
-    if (!user) return true;
-    setTimeout(() => {
-      console.log(`sending email to ${email}`);
-    }, 1000);
-    return true;
+    try {
+      await this.userRepository.findByEmail(email);
+      this.sendingEmail(email);
+    } catch (err) {
+    } finally {
+      return true;
+    }
   }
 
   getAuthToken(user: UserAccessTokenClaims | UserOutput): AuthTokenOutput {
@@ -91,7 +100,7 @@ export class AuthService {
     const user = await this.userRepository.findOne({
       where: [{ username: input.username }, { email: input.email }],
     });
-    if (user) throw new BadRequestException();
+    if (user) throw new UnauthorizedException();
     const registeredUser = await this.userService.createUser(input);
     return plainToClass(RegisterOutput, registeredUser, {
       excludeExtraneousValues: true,
@@ -102,9 +111,12 @@ export class AuthService {
     me: UserInRequest,
     password: string,
   ): Promise<UserOutput> {
-    const user = await this.userRepository.getById(me.userId);
-    if (!user) throw new UnauthorizedException();
-    user.password = password;
-    return this.userService.createUser(user);
+    try {
+      const user = await this.userRepository.getById(me.userId);
+      user.password = password;
+      return this.userService.createUser(user);
+    } catch (err) {
+      throw new UnauthorizedException();
+    }
   }
 }
