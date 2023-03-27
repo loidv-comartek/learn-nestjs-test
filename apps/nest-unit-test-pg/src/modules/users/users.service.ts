@@ -1,4 +1,9 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { plainToClass } from 'class-transformer';
 import { CreateUserInput } from './dto/user-create-input.dto';
 import { UserOutput } from './dto/user-output.dto';
@@ -22,7 +27,19 @@ export class UsersService {
   async createUser(input: CreateUserInput): Promise<UserOutput> {
     const user = plainToClass(User, input);
 
+    //handle email
+    const isExistEmail = await this.isExistEmail(input.email);
+    if (!isExistEmail) {
+      throw new HttpException(
+        'email existed in system',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    //hash password
     user.password = await hash(input.password, 10);
+
+    //save to db
     await this.repository.save(user);
     return plainToClass(UserOutput, user, {
       excludeExtraneousValues: true,
@@ -61,5 +78,9 @@ export class UsersService {
   async find(filter: FilterUserInput) {
     const users = await this.repository.find({ where: filter });
     return users;
+  }
+
+  async isExistEmail(email: string): Promise<boolean> {
+    return await this.repository.exist({ where: { email: email } });
   }
 }
