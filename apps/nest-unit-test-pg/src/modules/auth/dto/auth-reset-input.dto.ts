@@ -1,4 +1,14 @@
-import { PickType } from '@nestjs/mapped-types';
-import { CreateUserInput } from '../../users/dto/user-create-input.dto';
+import { ApiProperty } from '@nestjs/swagger';
+import {
+    IsNotEmpty,
+    IsString,
+    Length
+} from 'class-validator';
 
-export class ResetInput extends PickType(CreateUserInput, ['password']) {}
+export class ResetInput {
+  @ApiProperty()
+  @IsNotEmpty()
+  @Length(6, 100)
+  @IsString()
+  password: string;
+}

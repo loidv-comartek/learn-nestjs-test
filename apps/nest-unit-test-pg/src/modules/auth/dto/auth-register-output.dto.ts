@@ -24,9 +24,9 @@ export class RegisterOutput {
 
   @Expose()
   @ApiProperty()
-  createdAt: Date;
+  createdAt: string;
 
   @Expose()
   @ApiProperty()
-  updatedAt: Date;
+  updatedAt: string;
 }

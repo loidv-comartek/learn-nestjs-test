@@ -37,5 +37,5 @@ export class CreateUserInput {
 
   @ApiProperty()
   @IsBoolean()
-  isAccountDisabled?: boolean;
+  isAccountDisabled: boolean;
 }
