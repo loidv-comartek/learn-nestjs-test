@@ -1,70 +1,28 @@
 import { EnvService } from '@app/common/env/env.service';
-import { UnauthorizedException } from '@nestjs/common';
-import { Test, TestingModule } from '@nestjs/testing';
-import { FindOneOptions, FindOptionsWhere } from 'typeorm';
-import { User } from './entities/user.entity';
+import { Test,  } from '@nestjs/testing';
+import { DataSource,  } from 'typeorm';
 import { UserRepository } from './repositories/user.repository';
 import { UsersService } from './users.service';
+import { setupDataSource } from '../../../test/test-utils';
+import {
+  UnauthorizedException,
+} from '@nestjs/common';
 
 describe('UsersService', () => {
   let service: UsersService;
-
-  const mockedRepository = {
-    save: jest.fn(),
-    findOne: jest.fn(() => {
-      return {
-        username: 'John',
-        password: 'Admin@123',
-        email: 'john@gmail.com',
-        isAccountDisabled: false,
-      };
-    }),
-    findAndCount: jest.fn(),
-    getById: jest.fn(),
-    update: jest.fn(() => {
-      return {
-        generatedMaps: [],
-        raw: [],
-        affected: 1,
-      };
-    }),
-    find: jest.fn(() => {
-      return [
-        {
-          username: 'John',
-          password: 'Admin@123',
-          email: 'john@gmail.com',
-          isAccountDisabled: false,
-        },
-        {
-          username: 'John1',
-          password: 'JohnDoe@123',
-          email: 'JohnDoe@gmail.com',
-          isAccountDisabled: false,
-        },
-      ];
-    }),
-
-    exist: jest.fn((options: FindOneOptions<User>) => {
-      const email = (options.where as FindOptionsWhere<User>).email;
-
-      if (email == 'john@gmail.com') {
-        return true;
-      } else {
-        return false;
-      }
-    }),
-  };
-
+  let dataSource: DataSource;
   const mockedEnvService = { get: jest.fn() };
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+  beforeAll(async () => {
+    // dataSource = await setupDataSource();
+
+    const module = await Test.createTestingModule({
+      imports: [],
       providers: [
         UsersService,
         {
           provide: UserRepository,
-          useValue: mockedRepository,
+          useValue: new UserRepository(await setupDataSource()),
         },
         {
           provide: EnvService,
@@ -81,91 +39,68 @@ describe('UsersService', () => {
   });
 
   describe('create user', () => {
-    it('should be create a new user', async () => {
-      service.isExistEmail = jest.fn(async (email) => {
-        if (email == 'johndoe@gmail.com') return true;
-        return false;
-      });
-
-      const user = await service.createUser({
-        name: 'John Doe',
-        username: 'john',
-        password: 'Admin@123',
-        email: 'johndoe@gmail.com',
-        isAccountDisabled: false,
-      });
-
-      expect(user.username).toBeDefined();
+    it('should be return false when email is exist in system opposite return true', async () => {
+      expect(await service.isExistEmail('johndoe@gmail.com')).toBeFalsy();
     });
 
-    it('should be return error email is exist in system', async () => {
-      //mock check exist email
-      service.isExistEmail = jest.fn(async (email) => {
-        if (email == 'john@gmail.com') return true;
+    it('should return a user', async () => {
+      const isExistEmailSpy = jest.spyOn(service, 'isExistEmail');
+      isExistEmailSpy.mockImplementation(async () => {
         return false;
       });
 
-      try {
-        const user = await service.createUser({
+      expect(
+        service.createUser({
           name: 'John Doe',
           username: 'john',
           password: 'Admin@123',
-          email: 'john@gmail.com',
+          email: 'johndoe@gmail.com',
           isAccountDisabled: false,
-        });
-        expect(user.username).toBeDefined();
-      } catch (error) {
-        expect(error).toThrow();
-      }
+        }),
+      ).resolves.toMatch('john');
+
+      expect(isExistEmailSpy).toHaveBeenCalled();
+      expect(isExistEmailSpy).toHaveBeenCalledTimes(1);
+
+      // Restore the original method
+      isExistEmailSpy.mockRestore();
     });
   });
 
-  it('should be return a user', async () => {
-    const result = await service.findOne({ username: 'John' });
-    expect(result.username).toEqual('John');
-  });
-
-  it('should be return result update', async () => {
-    const result = await service.update({
-      id: 1,
-      name: 'John',
+  describe('get user', () => {
+    it('Should be throw unauthorized error when user do not exist in system', async () => {
+      await expect(
+        service.findOne({ email: 'anna@gmail.com' }),
+      ).rejects.toThrow(new UnauthorizedException());
     });
-    expect(result).toMatchObject({
-      generatedMaps: [],
-      raw: [],
-      affected: 1,
-    });
-  });
 
-  it('should be return a user array', async () => {
-    const result = await service.find({ username: 'admin' });
-    expect(result).toMatchObject([
-      {
-        username: 'John',
+    it('Should be return a object user', async () => {
+      const isExistEmailSpy = jest.spyOn(service, 'isExistEmail');
+      isExistEmailSpy.mockImplementation(async () => {
+        return false;
+      });
+      await service.createUser({
+        name: 'Jane Doe',
+        username: 'janedoe',
         password: 'Admin@123',
-        email: 'john@gmail.com',
+        email: 'janedoe@gmail.com',
         isAccountDisabled: false,
-      },
-      {
-        username: 'John1',
-        password: 'JohnDoe@123',
-        email: 'JohnDoe@gmail.com',
-        isAccountDisabled: false,
-      },
-    ]);
+      });
+
+      const result = await service.findOne({ email: 'janedoe@gmail.com' });
+      expect(result?.email).toEqual('janedoe@gmail.com');
+    });
   });
 
-  describe('it is valid email', () => {
-    it('should return true if email input is valid', async () => {
-      const email = 'john@gmail.com';
-      const result = await service.isExistEmail(email);
-      expect(result).toBeTruthy();
+  describe('get uses', () => {
+    it('Should be return a user array', async () => {
+      expect(await service.find({ email: 'janedoe@gmail.com' })).toHaveLength(
+        1,
+      );
     });
 
-    it('should return false if email input is invalid', async () => {
-      const email = 'janedoe@gmail.com';
-      const result = await service.isExistEmail(email);
-      expect(result).toBeFalsy();
+    it('Should be return a empty array', async () => {
+      expect(await service.find({ email: 'empty@gmail.com' })).toHaveLength(0);
     });
   });
 });

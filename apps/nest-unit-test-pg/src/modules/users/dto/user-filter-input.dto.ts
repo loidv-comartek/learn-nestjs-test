@@ -1,7 +1,16 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional, IsString } from 'class-validator';
+import { IsEmail, IsOptional, IsString } from 'class-validator';
 
 export class FilterUserInput {
+  @ApiProperty({
+    type: Number,
+    default: 1,
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  id?: number;
+
   @ApiProperty({
     type: String,
     default: 'john',
@@ -12,11 +21,12 @@ export class FilterUserInput {
   username?: string;
 
   @ApiProperty({
-    type: Number,
-    default: 1,
+    type: String,
+    default: 'john',
     required: false,
   })
   @IsOptional()
   @IsString()
-  id?: number;
+  @IsEmail()
+  email?: string;
 }
