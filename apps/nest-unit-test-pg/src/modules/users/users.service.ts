@@ -1,9 +1,4 @@
-import {
-  HttpException,
-  HttpStatus,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { plainToClass } from 'class-transformer';
 import { CreateUserInput } from './dto/user-create-input.dto';
 import { UserOutput } from './dto/user-output.dto';
@@ -12,7 +7,6 @@ import { compare, hash } from 'bcrypt';
 import { UserRepository } from './repositories/user.repository';
 import { EnvService } from '@app/common/env/env.service';
 import { FilterUserInput } from './dto/user-filter-input.dto';
-import { filter } from 'rxjs';
 import { UpdateUserInput } from './dto/user-update-input.dto';
 
 @Injectable()
@@ -30,10 +24,7 @@ export class UsersService {
     //handle email
     const isExistEmail = await this.isExistEmail(input.email);
     if (!isExistEmail) {
-      throw new HttpException(
-        'email existed in system',
-        HttpStatus.BAD_REQUEST,
-      );
+      new UnauthorizedException('email is exist in system');
     }
 
     //hash password
@@ -64,7 +55,9 @@ export class UsersService {
     const user = await this.repository.findOne({
       where: { ...filter },
     });
-    if (!user) throw new UnauthorizedException();
+    if (!user) {
+      throw new UnauthorizedException();
+    }
     return user;
   }
 
@@ -75,12 +68,13 @@ export class UsersService {
     );
   }
 
-  async find(filter: FilterUserInput) {
+  async find(filter: FilterUserInput): Promise<User[]> {
     const users = await this.repository.find({ where: filter });
     return users;
   }
 
   async isExistEmail(email: string): Promise<boolean> {
-    return await this.repository.exist({ where: { email: email } });
+    const count = await this.repository.findOne({ where: { email: email } });
+    return !!count;
   }
 }
