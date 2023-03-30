@@ -13,7 +13,7 @@ export class UsersController {
     summary: 'get users',
   })
   @Get()
-  async users(@Query() filterUser: FilterUserInput) {
+  async users(@Query() filterUser?: FilterUserInput) {
     return await this.usersService.find(filterUser);
   }
 

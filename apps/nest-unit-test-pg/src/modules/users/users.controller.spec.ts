@@ -89,18 +89,51 @@ describe('UsersController', () => {
 
   describe('find user by id', () => {
     it('should return an array of items', async () => {
-      const result = {
+      const result: User = {
         id: 1,
         name: 'John Doe',
         username: 'john',
         password: 'Admin@123',
         email: 'john@gmail.com',
         isAccountDisabled: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
-
       jest.spyOn(service, 'findOne').mockImplementation(async () => result);
-
       expect(await controller.user(1)).toBe(result);
+    });
+  });
+
+  describe('find users', () => {
+    it('should be return an user array', async () => {
+      const shouldBeResult = [
+        {
+          id: 1,
+          name: 'John Doe',
+          username: 'john',
+          password: 'Admin@123',
+          email: 'john@gmail.com',
+          isAccountDisabled: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          id: 2,
+          name: 'John Anna',
+          username: 'anna',
+          password: 'Admin@123',
+          email: 'anna@gmail.com',
+          isAccountDisabled: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ];
+
+      jest
+        .spyOn(service, 'find')
+        .mockImplementation(async () => shouldBeResult);
+
+      expect(await controller.users()).toEqual(shouldBeResult);
     });
   });
 });
