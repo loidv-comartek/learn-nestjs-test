@@ -431,9 +431,10 @@ describe('AppController (e2e)', () => {
     };
     let tokens: AuthTokenOutput;
     let authService: AuthService;
+    let userService: UsersService;
     beforeAll(async () => {
       authService = app.get(AuthService);
-      const userService = app.get(UsersService);
+      userService = app.get(UsersService);
       await userService.createUser({
         username: 'dung21022001',
         password: 'dung123456',
@@ -456,12 +457,12 @@ describe('AppController (e2e)', () => {
         })
         .expect(HttpStatus.UNAUTHORIZED);
     });
-    it('should return status 401 when authorization gone wrong', async () => {
+    it('should return status 401 when token authorization gone wrong', async () => {
       await request(app.getHttpServer())
         .post('/api/v1/auth/reset')
         .set('Authorization', 'Bearer ' + tokens.accessToken + '1')
         .send({
-          password: '',
+          password: passwordUpdateInputDto,
         })
         .expect(HttpStatus.UNAUTHORIZED);
     });
