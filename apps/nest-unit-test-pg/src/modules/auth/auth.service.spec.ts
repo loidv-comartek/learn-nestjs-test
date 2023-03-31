@@ -14,6 +14,8 @@ import { DataSource } from 'typeorm';
 import { RegisterInput } from './dto/auth-register-input.dto';
 import { compare, hash } from 'bcrypt';
 import { JwtPayloadInterface } from './interfaces/jwt-payload.interface';
+import { plainToClass } from 'class-transformer';
+import { RegisterOutput } from './dto/auth-register-output.dto';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -256,42 +258,59 @@ describe('AuthService', () => {
       email: 'dung11@gmail.com',
       isAccountDisabled: false,
     };
-    const userCreated = {
-      id: 123456,
+    const userData = {
       ...JSON.parse(JSON.stringify(registerInputDto)),
       createdAt: new Date(),
       updatedAt: new Date(),
     };
-    delete userCreated.password;
-    beforeEach(() => jest.clearAllMocks());
 
-    it('should throw new UnauthorizationExecption when register with username or email is existing', async () => {
-      const spyFindOneUser = jest.spyOn(userRepository, 'findOne');
-      spyFindOneUser.mockImplementation(async () => {
-        return userCreated;
-      });
-      await expect(service.register(registerInputDto)).rejects.toThrowError(
-        new UnauthorizedException(),
-      );
-      expect(spyFindOneUser).toHaveBeenCalled();
-      spyFindOneUser.mockReset();
+    beforeEach(async () => {
+      jest.clearAllMocks();
+      await userRepository.delete({});
+    });
+    it('should throw new UnauthorizationExecption when register with email is existing', async () => {
+      await userService.createUser(userData);
+      await expect(
+        service.register({
+          ...registerInputDto,
+          username: 'dung123456',
+        }),
+      ).rejects.toThrowError(new UnauthorizedException());
+    });
+
+    it('should throw new UnauthorizationExecption when register with username is existing', async () => {
+      await userService.createUser(userData);
+      await expect(
+        service.register({
+          ...registerInputDto,
+          email: 'dung111@gmail.com',
+        }),
+      ).rejects.toThrowError(new UnauthorizedException());
+    });
+
+    it('should throw new UnauthorizationExecption when register with username and email is existing', async () => {
+      await userService.createUser(userData);
+      await expect(
+        service.register({
+          ...registerInputDto,
+        }),
+      ).rejects.toThrowError(new UnauthorizedException());
     });
 
     it('should return created user when register with username or email is not existing', async () => {
-      const spyFindOneUser = jest.spyOn(userRepository, 'findOne');
+      const userCreated = {
+        ...userData,
+        id: 1234,
+      };
       const spyCreateUser = jest.spyOn(userService, 'createUser');
-      spyFindOneUser.mockImplementation(async () => {
-        return null;
-      });
       spyCreateUser.mockImplementation(async () => {
         return userCreated;
       });
+      delete userCreated.password;
       await expect(service.register(registerInputDto)).resolves.toMatchObject(
         userCreated,
       );
-      expect(spyFindOneUser).toHaveBeenCalled();
       expect(spyCreateUser).toHaveBeenCalled();
-      spyFindOneUser.mockReset();
       spyCreateUser.mockReset();
     });
   });

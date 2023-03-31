@@ -55,7 +55,6 @@ export class AuthService {
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve('ok');
-        console.log(`sending email to ${email}`);
       }, 1000);
     });
   }
